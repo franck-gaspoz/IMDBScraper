@@ -6,40 +6,63 @@
 
 ## Overview
 
-This is a [Scrapy](https://github.com/scrapy/scrapy) project which can be used to crawl [IMDB](https://www.imdb.com/) website to scrape movies' information and then store the data in `json` format. 
+This is a [Scrapy](https://github.com/scrapy/scrapy) project to crawl movie 'databases' web sites.
+Currently these sites are supported:
+- [IMDB](https://www.imdb.com/)
 
-- This project is a based on a fork of the project [https://github.com/dojutsu-user/IMDB-Scraper](https://github.com/dojutsu-user/IMDB-Scraper) from **Vaibhav Gupta** (2018,MIT)
+this software scrap movies' information and then store the data in `json` format. 
 
-## Todo
+### Get & Run release
 
-- Api HTTP restful
-- integrate more scrapers sources
+#### Download:
 
-### Crawlin
+- [MovieDbScrapper-Windows-64bit-intel-1.0.0](https://github.com/franck-gaspoz/MovieDbScraper/releases/tag/1.0.0)
+
+#### Usage:
+
+```bash
+# run the crawler:
+#  - search for movies having <Title>
+#  - eventually use extended filters if specified in <Filters>
+#  - output tot 
+
+./movie-db-scrapper-1.0.0.exe OutputFile Title [Filters]
+
+# exemple:
+
+./movie-db-scrapper-1.0.0.exe movie.json "Any movie"
+
+```
+
+- `OutputFile`: relative or absolute path to the `Json` outputs
+- `Title` : search the title
+- `Filters` : optional filters. default is `countries=US&languages=FR&count=10`
+
+### Install & run / develop
 
 1. Clone the repo and navigate into `IMDBsScraper` folder.
-```
+```bash
 $ git clone https://github.com/franck-gaspoz/IMDBScraper.git
 $ cd IMDBScraper/
 ```
 2. Create and activate a virtual environment.
-```
-(IMDBScraper/imdb_scraper) $ pipenv shell
+```bash
+(IMDBScraper) $ pipenv shell
 ```
 3. Install all dependencies.
-```
-(IMDBScraper/imdb_scraper)$ pipenv install
+```bash
+(IMDBScraper)$ pipenv install
 ```
 4. Navigate into `imdb_scraper` folder.
-```
-(IMDBScraper/imdb_scraper) $ cd imdb_scraper/
+```bash
+(IMDBScraper) $ cd movie_db_scrapers/
 ```
 
-5. Start the crawler.
+5. Start the crawler named `imdb` :
 ```
 syntax:
 
-scrapy crawl movie [-O <OUTPUT_FILE>] -L <LOG_LEVEL> [-a title=<TITLE>] [-a filters=<FILTERS>]
+scrapy crawl imdb [-O <OUTPUT_FILE>] -L <LOG_LEVEL> [-a title=<TITLE>] [-a filters=<FILTERS>]
 
 * default file: ./data/movie.json
 * -O <OUTPUT_FILE>      : write in file <OUTPUT_FILE>
@@ -55,20 +78,20 @@ scrapy crawl movie [-O <OUTPUT_FILE>] -L <LOG_LEVEL> [-a title=<TITLE>] [-a filt
 
 example:
 
-(IMDBScraper/imdb_scraper) $ scrapy crawl movie -O data/movie.json -L ERROR -a title="alien" -a filters="countries=US&languages=FR&count=10" 
+(IMDBScraper/movie_db_scrapers) $ scrapy crawl movie -O data/movie.json -L ERROR -a title="alien" -a filters="countries=US&languages=FR&count=10" 
 ```
 
 You can get your own query from here: [imdb.com/search/title](https://www.imdb.com/search/title). Copy the generated URL and 
 put it into the `filters` parameter in the command line
 
+```bash
+(IMDBScraper/movie_db_scrapers) $ scrapy crawl -h
 ```
-(IMDBScraper/imdb_scraper) $ scrapy crawl -h
-```
 
-6. Data will be stored in `json` file named `movie.json` located at `IMDBScraper/imdb_scraper/data/movie.json`.
+6. Data will be stored in `json` file named `movie.json` located at `IMDBScraper/movie_db_scrapers/data/movie.json`.
 
 
-The final data will be in the form:
+The final data will be structured like this (an object per movie in an array):
 
 ```json
 [{
@@ -190,6 +213,21 @@ These are the **FINAL** stats when the default `SEARCH_QUERY` is used.
  'start_time': datetime.datetime(2024, 8, 30, 20, 53, 48, 347422, tzinfo=datetime.timezone.utc)
  }
  ```
+
+## Releases
+
+1.1.0 - 2024/05/20 - support for multiple spiders
+
+- refactoring: imdb-scrapper -> movie_db_scrappers
+- command line improvements (launcher.py)
+
+1.0.0 - 2024/05/20 - initial version
+
+- scrap from command line
+
+## Notes
+
+This project is a based on a fork of the project [https://github.com/dojutsu-user/IMDB-Scraper](https://github.com/dojutsu-user/IMDB-Scraper) from **Vaibhav Gupta** (2018,MIT)
 
 ## Disclaimer
 
