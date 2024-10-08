@@ -6,56 +6,117 @@ settings = get_project_settings()
 
 # intro
 
-sys.stdout.write('MovieDbScraper 1.1.0\n')
-sys.stdout.write('--------------------')
-sys.stdout.write('website crawler | scrape movies information and then store the data in json format\n')
-sys.stdout.write('project link: https://github.com/franck-gaspoz/MovieDbScraper\n')
-sys.stdout.write('\n')
-sys.stdout.write('arguments:\n')
-sys.stdout.write('OutputFile Title [Filters]\n')
-sys.stdout.write('\n')
-sys.stdout.write('OutputFile: absolute or relative path of the output json file\n')
-sys.stdout.write('Title: query movies having title\n')
-sys.stdout.write('Filters: optional filters. default is countries=US&languages=FR&count=10\n')
-sys.stdout.write('\n')
+settings.set('BOT_NAME', 'movie_db_scrapers')
+settings.set('SPIDER_MODULES', ['movie_db_scrapers.spiders'])
+settings.set('NEWSPIDER_MODULE', 'movie_db_scrapers.spiders')
+settings.set('ROBOTSTXT_OBEY', True)
+
+SPIDERS_LIST = ['imdb']
+
+
+def title():
+    sys.stdout.write('| MovieDbScraper 1.1.0 |\n')
+
+
+def sep():
+    #                 | MovieDbScraper x.y.z |
+    sys.stdout.write('| ----------------------\n')
+
+
+def help():
+    sys.stdout.write('| ----------------------------------------------------------------------------------\n')
+    sys.stdout.write('|  website crawler | scrap movies information and then store the data in json format\n')
+    sys.stdout.write('|  project link: https://github.com/franck-gaspoz/MovieDbScraper\n')
+    sys.stdout.write('| ----------------------------------------------------------------------------------\n')
+    sys.stdout.write('\n')
+    sys.stdout.write('syntaxes: \n')
+    sys.stdout.write('----------\n')
+    sys.stdout.write('1: <SpiderId> <OutputFile> <Title> [<Filters>]\n')
+    sys.stdout.write('2: -h | --help\n')
+    sys.stdout.write('\n')
+    sys.stdout.write('arguments:\n')
+    sys.stdout.write('----------\n')
+    sys.stdout.write('<SpiderId>   : id of the invoked spider (eg: imdb). always in lower case\n')
+    sys.stdout.write('<OutputFile> : absolute or relative path of the json file output\n')
+    sys.stdout.write('<Title>      : query movies having title like this one\n')
+    sys.stdout.write('<Filters>    : optional filters. default is: "countries=US&languages=EN&count=10"\n')
+    sys.stdout.write('-h | --help  : dump this text and exit')
+    sys.stdout.write('\n')
+
+
+def list_spiders():
+    for spiderI in SPIDERS_LIST:
+        sys.stdout.write(spiderI+'\n')
+
+
+# default output file
+outputFile = None
+# default title
+title = None
+# default filters
+filters = None
+# scraper id
+spiderId = None
 
 # parse args
-# outputFile title [filters]
+# <SpiderId> <OutputFile> <Title> [<Filters>]
+# -h | --help
+# -l | --list
 
-sys.stdout.write('syntax: outputFile title [filters]=countries=US&languages=FR&count=10 \n')
-outputFile = 'result.json'
-title = ''
-filters = None
+k = len(sys.argv)
 
-if len(sys.argv) > 1:
-    outputFile = sys.argv[1]
-if len(sys.argv) > 2:
-    title = sys.argv[2]
-if len(sys.argv) == 3:
-    filters = sys.argv[3]
-if len(sys.argv)==0 or len(sys.argv)>3:
-    sys.stderr.write('bad number of parameters\n')
-    exit(0)
+if k == 2 and sys.argv[1] == '-h' or sys.argv[1] == '--help':
+    title()
+    help()
+    sys.exit(0)
 
-sys.stdout.write('outputFile='+outputFile+'\n')
-sys.stdout.write('title='+title+'\n')
+if k == 2 and sys.argv[1] == '-l' or sys.argv[1] == '--list':
+    list_spiders()
+    sys.exit(0)
+
+title()
+
+if k > 1:
+    spiderId = sys.argv[1]
+if k > 2:
+    outputFile = sys.argv[2]
+if k > 3:
+    title = sys.argv[3]
+if k > 4:
+    filters = sys.argv[4]
+if k < 4 or len(sys.argv) > 5:
+    help()
+    sys.stderr.write("ERROR:\n")
+    sys.stderr.write('bad number of parameters. expected: 1, or 3 or 4, but got: ' + str(len(sys.argv) - 1) + '\n')
+    sys.exit(0)
+
+sys.stdout.write('## outputFile=' + outputFile + '\n')
+sys.stdout.write('## spiderId=' + spiderId + '\n')
+sys.stdout.write('## title=' + title + '\n')
 if filters is not None:
-    sys.stdout.write('filters='+filters+'\n')
+    sys.stdout.write('## filters=' + filters + '\n')
 
 # setup
 
-settings.FEEDS = {}
-feeds = {
+feeds = {outputFile: {
     'format': 'json',
     'overwrite': True
-}
-settings.FEEDS[outputFile] = feeds
+}}
+
+settings.get('FEEDS').update(feeds)
+
+module = __import__('movie_db_scrapers.spiders.' + spiderId)
+mclass = getattr(getattr(getattr(
+    module, 'spiders'),
+    spiderId),
+    spiderId.title() + 'Spider')
 
 # Create a process
 process = CrawlerProcess(settings)
+
 if filters is not None:
-    process.crawl('movie', title=title, filters=filters)
+    process.crawl(mclass, title=title, filters=filters)
 else:
-    process.crawl('movie', title=title )
+    process.crawl(mclass, title=title)
 
 process.start()

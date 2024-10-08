@@ -4,6 +4,9 @@
 ![json](https://img.shields.io/static/v1?label=&message=JSON&color=cdf998&style=plastic&logo=javascript&logoColor=darkgreen) 
 ![linux](https://img.shields.io/static/v1?label=&message=Linux&color=285fdd&style=plastic&logo=linux) ![windows](https://img.shields.io/static/v1?label=&message=Windows&color=285fdd&style=plastic&logo=windows&logoColor=77DDFF) ![osx](https://img.shields.io/static/v1?label=&message=OSX&color=285fdd&style=plastic&logo=apple&logoColor=AAFFAA)
 
+![release](https://img.shields.io/github/release-date-pre/franck-gaspoz/MovieDbScraper?&style=plastic&label=release)
+![release](https://img.shields.io/github/v/release/franck-gaspoz/MovieDbScraper?&style=plastic&label=)
+
 ## Overview
 
 This is a [Scrapy](https://github.com/scrapy/scrapy) project to crawl movie 'databases' web sites.
@@ -12,50 +15,62 @@ Currently these sites are supported:
 
 this software scrap movies' information and then store the data in `json` format. 
 
-### Get & Run release
+## Get & Run release
 
-#### Download:
+### Download a  release:
 
+- [MovieDbScrapper-Windows-64bit-intel-1.1.0](https://github.com/franck-gaspoz/MovieDbScraper/releases/tag/1.1.0)
 - [MovieDbScrapper-Windows-64bit-intel-1.0.0](https://github.com/franck-gaspoz/MovieDbScraper/releases/tag/1.0.0)
 
-#### Usage:
+links to a standalone executable (windows,64bit intel) and release source archive
+
+### Usage:
 
 ```bash
 # run the crawler:
+#  - choose which spider to use
 #  - search for movies having <Title>
 #  - eventually use extended filters if specified in <Filters>
-#  - output tot 
-
-./movie-db-scrapper-1.0.0.exe OutputFile Title [Filters]
+#  - output to a json file
 
 # exemple:
 
-./movie-db-scrapper-1.0.0.exe movie.json "Any movie"
-
+./movie-db-scrapper-1.1.0.exe imdb movies.json "Any movie" countries=US&languages=US&count=10
 ```
 
+#### syntaxes:
+
+- `<SpiderId> <OutputFile> <Title> [<Filters>]`
+- `-l | --list`
+- `-h | --help`
+
+#### arguments:
+
+- `SpiderId`: id of the spider to use. currently only one is accepted: `imdb`
 - `OutputFile`: relative or absolute path to the `Json` outputs
 - `Title` : search the title
 - `Filters` : optional filters. default is `countries=US&languages=FR&count=10`
+- `-l | --list` : dump spiders ids (one per line)
+- `-h | --help` : dump the help
 
-### Install & run / develop
+## Install & run / develop
 
 1. Clone the repo and navigate into `IMDBsScraper` folder.
 ```bash
-$ git clone https://github.com/franck-gaspoz/IMDBScraper.git
-$ cd IMDBScraper/
+$ git clone https://github.com/franck-gaspoz/MovieDbScraper.git
+$ cd MovieDbScraper/
 ```
 2. Create and activate a virtual environment.
 ```bash
-(IMDBScraper) $ pipenv shell
+(MovieDbScraper) $ pipenv shell
 ```
 3. Install all dependencies.
 ```bash
-(IMDBScraper)$ pipenv install
+(MovieDbScraper)$ pipenv install
 ```
 4. Navigate into `imdb_scraper` folder.
 ```bash
-(IMDBScraper) $ cd movie_db_scrapers/
+(MovieDbScraper) $ cd movie_db_scrapers/
 ```
 
 5. Start the crawler named `imdb` :
@@ -78,18 +93,17 @@ scrapy crawl imdb [-O <OUTPUT_FILE>] -L <LOG_LEVEL> [-a title=<TITLE>] [-a filte
 
 example:
 
-(IMDBScraper/movie_db_scrapers) $ scrapy crawl movie -O data/movie.json -L ERROR -a title="alien" -a filters="countries=US&languages=FR&count=10" 
+(MovieDbScraper/movie_db_scrapers) $ scrapy crawl movie -O data/movie.json -L ERROR -a title="alien" -a filters="countries=US&languages=FR&count=10" 
 ```
 
 You can get your own query from here: [imdb.com/search/title](https://www.imdb.com/search/title). Copy the generated URL and 
 put it into the `filters` parameter in the command line
 
 ```bash
-(IMDBScraper/movie_db_scrapers) $ scrapy crawl -h
+(MovieDbScraper/movie_db_scrapers) $ scrapy crawl -h
 ```
 
-6. Data will be stored in `json` file named `movie.json` located at `IMDBScraper/movie_db_scrapers/data/movie.json`.
-
+6. Data will be stored in `json` file named `movie.json` located at `MovieDbScraper/movie_db_scrapers/data/movie.json`.
 
 The final data will be structured like this (an object per movie in an array):
 
@@ -214,14 +228,26 @@ These are the **FINAL** stats when the default `SEARCH_QUERY` is used.
  }
  ```
 
+## Build a standalone executable
+
+```bash
+$ cd MovieDbScraper/movie_db_scrapers
+(MovieDbScraper/movie_db_scrapers) $ ./publish.bat 1.1.0
+```
+
+this will build the file `movie-db-scrapper-windows-64bit-intel-1.1.0.exe` in the `/dist` folder
+
 ## Releases
 
-1.1.0 - 2024/05/20 - support for multiple spiders
+1.1.0 - 2024/08/10 - support for multiple spiders
 
 - refactoring: imdb-scrapper -> movie_db_scrappers
+- move settings to launcher
 - command line improvements (launcher.py)
+- fix bug call executable from any path module error
+- minor bugs fixes
 
-1.0.0 - 2024/05/20 - initial version
+1.0.0 - 2024/20/05 - initial version
 
 - scrap from command line
 

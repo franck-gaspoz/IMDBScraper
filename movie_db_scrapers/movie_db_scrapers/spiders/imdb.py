@@ -4,32 +4,38 @@
 # parameters (-a name=value)
 #
 # title                 movie title             default: ''
-# filters               query filters           default: ''
-
+# filters               query filters           default: 'countries=US&languages=EN&count=10'
+#
 # exemple filters:
 # user-rating           1.0,10.0
 # countries             US
 # languages             EN
 # count                 10
 #
-# default filter:       countries=US&languages=FR&count=10
-#
 # must form a valid query, for example: title_type=feature&languages=fr
-#
+
 
 import logging
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 
 QUERY_URL = 'https://www.imdb.com/search/title?'
-DEFAULT_FILTERS = 'countries=US&languages=FR&count=10'
+DEFAULT_FILTERS = 'countries=US&languages=EN&count=10'
 ATTR_TITLE = 'title'
 ATTR_MUTE = 'mute'
 ATTR_FILTERS = 'filters'
 
+REFERRER = 'https://www.imdb.com'
+USER_AGENT = 'PostmanRuntime/7.32.3'
+ACCEPT_ENCODING = 'gzip, deflate, br, zstd'
+ACCEPT_LANGUAGE = 'fr,fr-FR;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6'
+CACHE_CONTROL = 'no-cache'
 
-class MovieSpider(CrawlSpider):
-    name = 'movie'
+DEFAULT_REQUEST_HEADERS = "DEFAULT_REQUEST_HEADERS"
+
+
+class ImdbSpider(CrawlSpider):
+    name = 'imdb'
     allowed_domains = ['imdb.com']
     rules = (Rule(
         LinkExtractor(
@@ -48,22 +54,36 @@ class MovieSpider(CrawlSpider):
     def q(name, value):
         return name + '=' + value if value is not None else ''
 
+    @classmethod
+    def update_settings(cls, settings):
+        super().update_settings(settings)
+        h = {
+            'Referer': REFERRER,
+            'User-Agent': USER_AGENT,
+            'accept-encoding': ACCEPT_ENCODING,
+            # setup lang here. /!\ may change parse patterns
+            'accept-language': ACCEPT_LANGUAGE,
+            'cache-control': CACHE_CONTROL
+        }
+        settings.set(DEFAULT_REQUEST_HEADERS, h, priority="spider")
+
     def __init__(self, **kwargs):
 
         if kwargs is not None:
             self.title = kwargs[ATTR_TITLE] if ATTR_TITLE in kwargs else None
             self.filters = kwargs[ATTR_FILTERS] if ATTR_FILTERS in kwargs else DEFAULT_FILTERS
-            self.logger.info(ATTR_TITLE + '=' + MovieSpider.s(self.title))
-            self.logger.info(ATTR_FILTERS + '=' + MovieSpider.s(self.filters))
+            self.logger.info(ATTR_TITLE + '=' + ImdbSpider.s(self.title))
+            self.logger.info(ATTR_FILTERS + '=' + ImdbSpider.s(self.filters))
 
-        title = MovieSpider.q(ATTR_TITLE, self.title)
+        title = ImdbSpider.q(ATTR_TITLE, self.title)
         sep1 = '&' if title is not None else ''
-        filters = MovieSpider.q(ATTR_FILTERS, self.filters)
+        filters = ImdbSpider.q(ATTR_FILTERS, self.filters)
         self.start_urls = [QUERY_URL + title + sep1 + filters]
 
         super().__init__(**kwargs)
 
-    def exf(self, selector):
+    @staticmethod
+    def exf(selector):
         return selector.extract_first() if len(selector) > 0 else None
 
     def ex(self, selector):
@@ -80,16 +100,15 @@ class MovieSpider(CrawlSpider):
         self.logger.info('parse_detail_page:')
         self.logger.info(response)
 
-        data = {}
-
         # ids
 
-        data['url'] = response.url.split('?')[0]
+        data = {'url': response.url.split('?')[0]}
         t = response.url.split('?')[0].split('/')
         t = list(filter(lambda x: x != '',t))
         data['id'] = t.pop()
 
         # global infos
+
         data['title'] = self.exf(response.css('h1 > span::text'))
 
         data['summary'] = self.exf(response.css('div[data-testid="interests"]+p > span::text'))
@@ -110,6 +129,7 @@ class MovieSpider(CrawlSpider):
             response.css('div[data-testid="hero-rating-bar__aggregate-rating__score"]+div+div::text'))
 
         # main crew
+
         data['director'] = self.exf(
             response.css('li[data-testid="title-pc-principal-credit"] > div > ul > li > a::text'))
         t = response.css('li[data-testid="title-pc-principal-credit"] > div')
@@ -121,10 +141,12 @@ class MovieSpider(CrawlSpider):
 
         actors = self.ex(
             response.css('div[data-testid="shoveler-items-container"][class*="wraps"] > div > div > a::text'))
+
         actorsPics = response.css('div[data-testid="shoveler-items-container"][class*="wraps"] > div')
         actorsChs = response.css('div[data-testid="shoveler-items-container"][class*="wraps"] > div > div+div > div')
-        t = [None] * len(actors)
+
         if actors is not None:
+            t = [None] * len(actors)
             for i, actor in enumerate(actors):
                 t[i] = {'actor': actor, 'picUrl': None}
                 pic = self.ex(actorsPics[i].css('img::attr(src)'))
@@ -145,6 +167,7 @@ class MovieSpider(CrawlSpider):
             data['anecdotes'] = None
 
         # pics
+
         data['minPicUrl'] = self.atr(response.css('div[data-testid="hero-media__poster"] > div > img'), 'src')
         data['minPicWidth'] = self.atr(response.css('div[data-testid="hero-media__poster"] > div > img'), 'width')
         data['minPicAlt'] = self.atr(response.css('div[data-testid="hero-media__poster"] > div > img'), 'alt')
