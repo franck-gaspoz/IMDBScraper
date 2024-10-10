@@ -1,6 +1,7 @@
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 import sys
+from movie_db_scrapers.spiders.imdb import ImdbSpider
 
 settings = get_project_settings()
 
@@ -14,8 +15,8 @@ settings.set('ROBOTSTXT_OBEY', True)
 SPIDERS_LIST = ['imdb']
 
 
-def title():
-    sys.stdout.write('| MovieDbScraper 1.1.0 |\n')
+def dump_title():
+    sys.stdout.write('| MovieDbScraper 1.1.1 |\n')
 
 
 def sep():
@@ -46,7 +47,7 @@ def help():
 
 def list_spiders():
     for spiderI in SPIDERS_LIST:
-        sys.stdout.write(spiderI+'\n')
+        sys.stdout.write(spiderI + '\n')
 
 
 # default output file
@@ -66,7 +67,7 @@ spiderId = None
 k = len(sys.argv)
 
 if k == 2 and sys.argv[1] == '-h' or sys.argv[1] == '--help':
-    title()
+    dump_title()
     help()
     sys.exit(0)
 
@@ -74,7 +75,7 @@ if k == 2 and sys.argv[1] == '-l' or sys.argv[1] == '--list':
     list_spiders()
     sys.exit(0)
 
-title()
+dump_title()
 
 if k > 1:
     spiderId = sys.argv[1]
@@ -88,7 +89,7 @@ if k < 4 or len(sys.argv) > 5:
     help()
     sys.stderr.write("ERROR:\n")
     sys.stderr.write('bad number of parameters. expected: 1, or 3 or 4, but got: ' + str(len(sys.argv) - 1) + '\n')
-    sys.exit(0)
+    sys.exit(1)
 
 sys.stdout.write('## outputFile=' + outputFile + '\n')
 sys.stdout.write('## spiderId=' + spiderId + '\n')
@@ -102,21 +103,18 @@ feeds = {outputFile: {
     'format': 'json',
     'overwrite': True
 }}
-
 settings.get('FEEDS').update(feeds)
 
-module = __import__('movie_db_scrapers.spiders.' + spiderId)
-mclass = getattr(getattr(getattr(
-    module, 'spiders'),
-    spiderId),
-    spiderId.title() + 'Spider')
-
 # Create a process
+
 process = CrawlerProcess(settings)
 
-if filters is not None:
-    process.crawl(mclass, title=title, filters=filters)
-else:
-    process.crawl(mclass, title=title)
+cl = None
+if spiderId == 'imdb':
+    cl = ImdbSpider
+if cl is None:
+    sys.stderr.write('spider unknown: ' + spiderId + '\n')
+    sys.exit(2)
 
+process.crawl(cl, title=title, filters=filters)
 process.start()

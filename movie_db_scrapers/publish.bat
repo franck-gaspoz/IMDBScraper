@@ -6,10 +6,9 @@
 
 del .\dist\M*
 del dist/launcher.exe
-@rem pyinstaller --noconfirm --onefile --console --hidden-import ""  ".\launcher.py"
 
 pyinstaller --noconfirm --onefile --console ".\launcher.py"
 
 cd dist
-rename "launcher.exe" "movie-db-scrapper-windows-64bit-intel-%1.exe"
+rename "launcher.exe" "movie-db-scrapper-windows-64bit-intel-%1.exe "
 dir
